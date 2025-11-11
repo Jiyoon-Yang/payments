@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * POST /api/payments
@@ -13,24 +13,26 @@ export async function POST(request: NextRequest) {
     // 2. 필수 필드 검증
     if (!billingKey || !orderName || !amount || !customer?.id) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: '필수 필드가 누락되었습니다.' 
+        {
+          success: false,
+          error: "필수 필드가 누락되었습니다.",
         },
         { status: 400 }
       );
     }
 
     // 3. paymentId 생성 (고유한 결제 ID)
-    const paymentId = `payment_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const paymentId = `payment_${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(2, 9)}`;
 
     // 4. portone API 시크릿 키 확인
     const portoneApiSecret = process.env.PORTONE_API_SECRET;
     if (!portoneApiSecret) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'PORTONE_API_SECRET 환경 변수가 설정되지 않았습니다.' 
+        {
+          success: false,
+          error: "PORTONE_API_SECRET 환경 변수가 설정되지 않았습니다.",
         },
         { status: 500 }
       );
@@ -38,12 +40,14 @@ export async function POST(request: NextRequest) {
 
     // 5. portone v2 API 호출 - billingKey를 사용한 결제 요청
     const portoneResponse = await fetch(
-      `https://api.portone.io/payments/${encodeURIComponent(paymentId)}/billing-key`,
+      `https://api.portone.io/payments/${encodeURIComponent(
+        paymentId
+      )}/billing-key`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `PortOne ${portoneApiSecret}`,
+          "Content-Type": "application/json",
+          Authorization: `PortOne ${portoneApiSecret}`,
         },
         body: JSON.stringify({
           billingKey,
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
           customer: {
             id: customer.id,
           },
-          currency: 'KRW',
+          currency: "KRW",
         }),
       }
     );
@@ -63,11 +67,11 @@ export async function POST(request: NextRequest) {
     const portoneData = await portoneResponse.json();
 
     if (!portoneResponse.ok) {
-      console.error('Portone API 오류:', portoneData);
+      console.error("Portone API 오류:", portoneData);
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: portoneData.message || '결제 요청 실패',
+          error: portoneData.message || "결제 요청 실패",
         },
         { status: portoneResponse.status }
       );
@@ -79,18 +83,18 @@ export async function POST(request: NextRequest) {
       paymentId,
       portoneData,
     });
-
   } catch (error) {
-    console.error('결제 API 오류:', error);
+    console.error("결제 API 오류:", error);
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+        error:
+          error instanceof Error
+            ? error.message
+            : "알 수 없는 오류가 발생했습니다.",
       },
       { status: 500 }
     );
   }
 }
-
-
 
