@@ -17,3 +17,17 @@ export interface Magazine {
   updated_at?: string;
 }
 
+export interface Payment {
+  id?: string;
+  transaction_key: string;
+  amount: number;
+  status: 'Paid' | 'Cancelled';
+  start_at: string;
+  end_at: string;
+  end_grace_at: string;
+  next_schedule_at: string;
+  next_schedule_id: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
