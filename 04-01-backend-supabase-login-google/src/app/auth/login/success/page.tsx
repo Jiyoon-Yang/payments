@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function LoginSuccessPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
