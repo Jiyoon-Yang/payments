@@ -46,26 +46,79 @@ export const usePayment = () => {
       }
 
       // 3. PortOne SDK 확인 및 로드 대기
-      let retryCount = 0;
-      const maxRetries = 10;
-      while (!window.PortOne && retryCount < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        retryCount++;
-      }
+      const waitForSDK = (): Promise<void> => {
+        return new Promise((resolve, reject) => {
+          if (typeof window === "undefined") {
+            reject(new Error("브라우저 환경이 아닙니다."));
+            return;
+          }
 
-      if (!window.PortOne) {
+          // 이미 로드되어 있는 경우
+          if (
+            window.PortOne &&
+            typeof window.PortOne.requestIssueBillingKey === "function"
+          ) {
+            console.log("포트원 SDK가 이미 로드되어 있습니다.");
+            resolve();
+            return;
+          }
+
+          // 최대 5초 대기 (100ms 간격으로 50회 확인)
+          let attempts = 0;
+          const maxAttempts = 50;
+          const checkInterval = setInterval(() => {
+            attempts++;
+            if (
+              window.PortOne &&
+              typeof window.PortOne.requestIssueBillingKey === "function"
+            ) {
+              console.log("포트원 SDK가 로드되었습니다.");
+              clearInterval(checkInterval);
+              resolve();
+            } else if (attempts >= maxAttempts) {
+              console.error("포트원 SDK 로드 실패:", {
+                PortOne: window.PortOne,
+                type: typeof window.PortOne,
+                keys: window.PortOne ? Object.keys(window.PortOne) : null,
+              });
+              clearInterval(checkInterval);
+              reject(new Error("포트원 SDK 로드 타임아웃"));
+            } else {
+              console.log(
+                `포트원 SDK 로드 대기 중... (${attempts}/${maxAttempts})`
+              );
+            }
+          }, 100);
+        });
+      };
+
+      try {
+        await waitForSDK();
+      } catch (error) {
+        console.error("포트원 SDK 로드 실패:", error);
         alert("포트원 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.");
         return;
       }
 
-      // 4. 빌링키 발급 요청
+      // 4. SDK 최종 확인
+      if (
+        !window.PortOne ||
+        typeof window.PortOne.requestIssueBillingKey !== "function"
+      ) {
+        alert(
+          "포트원 SDK가 제대로 로드되지 않았습니다. 페이지를 새로고침해주세요."
+        );
+        return;
+      }
+
+      // 5. 빌링키 발급 요청
       const issueResponse = await window.PortOne.requestIssueBillingKey({
         storeId,
         channelKey,
         billingKeyMethod: "CARD",
       });
 
-      // 5. 빌링키 발급 실패 처리
+      // 6. 빌링키 발급 실패 처리
       if (issueResponse.code || !issueResponse.billingKey) {
         alert(
           `빌링키 발급에 실패했습니다: ${
@@ -75,12 +128,12 @@ export const usePayment = () => {
         return;
       }
 
-      // 6. 세션 토큰 가져오기
+      // 7. 세션 토큰 가져오기
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      // 7. 빌링키로 결제 API 요청
+      // 8. 빌링키로 결제 API 요청
       const paymentApiResponse = await fetch("/api/payments", {
         method: "POST",
         headers: {
@@ -100,17 +153,15 @@ export const usePayment = () => {
 
       const paymentResult = await paymentApiResponse.json();
 
-      // 8. 결제 실패 처리
+      // 9. 결제 실패 처리
       if (!paymentResult.success) {
         alert(
-          `결제에 실패했습니다: ${
-            paymentResult.error || "알 수 없는 오류"
-          }`
+          `결제에 실패했습니다: ${paymentResult.error || "알 수 없는 오류"}`
         );
         return;
       }
 
-      // 9. 결제 성공 처리
+      // 10. 결제 성공 처리
       alert("구독에 성공하였습니다.");
       router.push("/magazines");
     } catch (error) {
@@ -123,4 +174,3 @@ export const usePayment = () => {
     handleSubscribe,
   };
 };
-

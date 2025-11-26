@@ -2,11 +2,41 @@
 
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { usePayment } from "./hooks/index.payment.hook";
 
 export default function GlossaryPayments() {
   const router = useRouter();
   const { handleSubscribe } = usePayment();
+  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
+
+  useEffect(() => {
+    // 포트원 SDK 로드 확인
+    const checkSDK = () => {
+      if (typeof window !== 'undefined' && window.PortOne) {
+        setIsSDKLoaded(true);
+        return true;
+      }
+      return false;
+    };
+
+    // 즉시 확인
+    if (checkSDK()) {
+      return;
+    }
+
+    // 주기적으로 확인 (최대 5초)
+    let attempts = 0;
+    const maxAttempts = 50; // 5초 (100ms * 50)
+    const interval = setInterval(() => {
+      attempts++;
+      if (checkSDK() || attempts >= maxAttempts) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleNavigateToList = () => {
     router.push('/magazines');
@@ -68,8 +98,10 @@ export default function GlossaryPayments() {
             <button 
               className="payment-subscribe-button"
               onClick={handleSubscribe}
+              disabled={!isSDKLoaded}
+              style={{ opacity: isSDKLoaded ? 1 : 0.6, cursor: isSDKLoaded ? 'pointer' : 'not-allowed' }}
             >
-              구독하기
+              {isSDKLoaded ? '구독하기' : '로딩 중...'}
             </button>
           </div>
         </div>
