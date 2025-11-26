@@ -45,9 +45,16 @@ export const usePayment = () => {
         return;
       }
 
-      // 3. PortOne SDK 확인
+      // 3. PortOne SDK 확인 및 로드 대기
+      let retryCount = 0;
+      const maxRetries = 10;
+      while (!window.PortOne && retryCount < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        retryCount++;
+      }
+
       if (!window.PortOne) {
-        alert("포트원 SDK가 로드되지 않았습니다.");
+        alert("포트원 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.");
         return;
       }
 
