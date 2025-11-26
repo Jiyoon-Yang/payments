@@ -1,10 +1,7 @@
 'use client';
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useMagazineDetail } from "./hooks/index.func.binding";
-import { useGuardSubscribe } from "../index.guard.subscribe.hook";
 
 const getCategoryColor = (category: string) => {
   const colorMap: Record<string, string> = {
@@ -28,28 +25,11 @@ interface PageProps {
 }
 
 export default function GlossaryCardsDetail({ params }: PageProps) {
-  const router = useRouter();
   const { magazine, loading, error } = useMagazineDetail(params.id);
-  const { checkSubscribe } = useGuardSubscribe();
 
   const onNavigateToList = () => {
     window.location.href = '/magazines';
   };
-
-  // 페이지 진입 시 구독 가드 확인
-  useEffect(() => {
-    const verifySubscribe = async () => {
-      const isSubscribed = await checkSubscribe();
-      if (!isSubscribed) {
-        router.push('/magazines');
-      }
-    };
-
-    if (!loading && !error && magazine) {
-      verifySubscribe();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, error, magazine]);
 
   if (loading) {
     return (

@@ -1,11 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { LogIn, LogOut, PenSquare, Sparkles, User } from "lucide-react";
+import { LogIn, PenSquare, Sparkles } from "lucide-react";
 import { useMagazines } from './index.binding.hook';
-import { useLoginLogoutStatus } from './index.login.logout.status.hook';
-import { useGuardAuth } from './index.guard.auth.hook';
-import { useGuardSubscribe } from './index.guard.subscribe.hook';
 
 const getCategoryColor = (category: string) => {
   const colorMap: Record<string, string> = {
@@ -25,36 +22,9 @@ const getCategoryColor = (category: string) => {
 export default function GlossaryCards() {
   const router = useRouter();
   const { magazines, loading, error } = useMagazines();
-  const { 
-    isLoggedIn, 
-    profileImage, 
-    name, 
-    handleLogout, 
-    navigateToMyPage, 
-    navigateToLogin 
-  } = useLoginLogoutStatus();
-  const { checkAuth } = useGuardAuth();
-  const { checkSubscribe } = useGuardSubscribe();
 
-  const handleCardClick = async (id: string) => {
-    const isSubscribed = await checkSubscribe();
-    if (isSubscribed) {
-      router.push(`/magazines/${id}`);
-    }
-  };
-
-  const handleWriteClick = async () => {
-    const isSubscribed = await checkSubscribe();
-    if (isSubscribed) {
-      router.push('/magazines/new');
-    }
-  };
-
-  const handleSubscribeClick = async () => {
-    const isAuthenticated = await checkAuth();
-    if (isAuthenticated) {
-      router.push('/payments');
-    }
+  const handleCardClick = (id: string) => {
+    router.push(`/magazines/${id}`);
   };
 
   return (
@@ -63,75 +33,23 @@ export default function GlossaryCards() {
         <h1>IT 매거진</h1>
         <p className="magazine-subtitle">최신 기술 트렌드와 인사이트를 전합니다</p>
         <div className="magazine-header-actions">
-          {/* 로그인 상태에 따른 조건부 렌더링 */}
-          {isLoggedIn ? (
-            <>
-              {/* 프로필 영역 */}
-              <div 
-                className="magazine-header-profile"
-                onClick={navigateToMyPage}
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-              >
-                {profileImage ? (
-                  <img 
-                    src={profileImage} 
-                    alt="프로필" 
-                    className="magazine-header-avatar"
-                    style={{ 
-                      width: '32px', 
-                      height: '32px', 
-                      borderRadius: '50%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                ) : (
-                  <User 
-                    className="magazine-header-avatar-icon" 
-                    style={{ 
-                      width: '32px', 
-                      height: '32px', 
-                      padding: '4px',
-                      borderRadius: '50%',
-                      backgroundColor: '#e5e7eb'
-                    }}
-                  />
-                )}
-                <span className="magazine-header-name">{name}</span>
-              </div>
-              
-              {/* 로그아웃 버튼 */}
-              <button 
-                className="magazine-header-button magazine-header-button-ghost"
-                onClick={handleLogout}
-              >
-                <LogOut className="magazine-button-icon" />
-                <span className="magazine-button-text">로그아웃</span>
-              </button>
-            </>
-          ) : (
-            /* 로그인 버튼 */
-            <button 
-              className="magazine-header-button magazine-header-button-ghost"
-              onClick={navigateToLogin}
-            >
-              <LogIn className="magazine-button-icon" />
-              <span className="magazine-button-text">로그인</span>
-            </button>
-          )}
-          
-          {/* 글쓰기 버튼 */}
+          <button 
+            className="magazine-header-button magazine-header-button-ghost"
+            onClick={() => router.push('/auth/login')}
+          >
+            <LogIn className="magazine-button-icon" />
+            <span className="magazine-button-text">로그인</span>
+          </button>
           <button 
             className="magazine-header-button magazine-header-button-primary"
-            onClick={handleWriteClick}
+            onClick={() => router.push('/magazines/new')}
           >
             <PenSquare className="magazine-button-icon" />
             <span className="magazine-button-text">글쓰기</span>
           </button>
-          
-          {/* 구독하기 버튼 */}
           <button 
             className="magazine-header-button magazine-header-button-payment"
-            onClick={handleSubscribeClick}
+            onClick={() => router.push('/payments')}
           >
             <Sparkles className="magazine-button-icon" />
             <span className="magazine-button-text">구독하기</span>

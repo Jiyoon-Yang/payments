@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSubmitMagazine } from "./hooks/index.submit.hook";
-import { useGuardSubscribe } from "../index.guard.subscribe.hook";
 
 interface FormData {
   category: string;
@@ -114,23 +113,10 @@ function CustomDropdown({
 export default function Page() {
   const router = useRouter();
   const { submitMagazine, isSubmitting, error } = useSubmitMagazine();
-  const { checkSubscribe } = useGuardSubscribe();
   
   const onNavigateToList = () => {
     window.location.href = '/magazines';
   };
-
-  // 페이지 진입 시 구독 가드 확인
-  useEffect(() => {
-    const verifySubscribe = async () => {
-      const isSubscribed = await checkSubscribe();
-      if (!isSubscribed) {
-        router.push('/magazines');
-      }
-    };
-
-    verifySubscribe();
-  }, [checkSubscribe, router]);
   const [formData, setFormData] = useState<FormData>({
     category: "",
     title: "",

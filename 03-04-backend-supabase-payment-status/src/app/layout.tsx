@@ -14,8 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <head>
         <Script src="https://cdn.portone.io/v2/browser-sdk.js" strategy="beforeInteractive" />
+      </head>
+      <body>
         {children}
       </body>
     </html>

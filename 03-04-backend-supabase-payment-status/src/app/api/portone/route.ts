@@ -4,12 +4,12 @@ import { randomUUID } from 'crypto';
 import axios from 'axios';
 
 // Supabase 클라이언트 생성
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-service-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // 포트원 API 설정
-const PORTONE_API_SECRET = process.env.PORTONE_API_SECRET || 'placeholder-secret';
+const PORTONE_API_SECRET = process.env.PORTONE_API_SECRET!;
 const PORTONE_API_BASE = 'https://api.portone.io';
 
 // 타입 정의
@@ -29,7 +29,6 @@ interface PortonePayment {
     id: string;
   };
   scheduleId?: string;
-  customData?: string;
 }
 
 interface PaymentScheduleItem {
@@ -98,7 +97,6 @@ export async function POST(request: NextRequest) {
           end_grace_at: endGraceAt.toISOString(),
           next_schedule_at: nextScheduleAt.toISOString(),
           next_schedule_id: nextScheduleId,
-          user_id: paymentData.customData,
         })
         .select()
         .single();
@@ -132,7 +130,6 @@ export async function POST(request: NextRequest) {
                 amount: {
                   total: paymentData.amount.total,
                 },
-                customData: paymentData.customData,
                 currency: 'KRW',
               },
               timeToPay: nextScheduleAt.toISOString(),
@@ -191,7 +188,6 @@ export async function POST(request: NextRequest) {
           end_grace_at: existingPayment.end_grace_at,
           next_schedule_at: existingPayment.next_schedule_at,
           next_schedule_id: existingPayment.next_schedule_id,
-          user_id: existingPayment.user_id,
         })
         .select()
         .single();
